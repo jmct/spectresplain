@@ -15,10 +15,10 @@ security problem: but the problem was not public yet, so late on Tuesday and
 early Wednesday\footnote{Even when I called you, JMCB.} it was not 100\%
 certain what the problem was.
 
-By the end of yesterday several independent security researches were able to
+By the end of yesterday several independent security researchers were able to
 reverse engineer what the problem was \emph{only based on what the solution
 was}. By the end of yesterday the cat was out of the bag and the original
-security researches published the flaws they had found, confirming what people
+security researchers published the flaws they had found, confirming what people
 had been guessing. Because it is useful to have names, the researchers who
 discovered these flaws named them: Spectre and Meltdown.
 
@@ -39,7 +39,7 @@ discovered/announced, yesterday.
 
 \subsection*{A Wood Shop}
 
-You own and operator a woodworking business our of an industrial wood shop. You
+You own and operate a woodworking business out of an industrial wood shop. You
 have two clients, A and B, and they both have custom designs. One of the
 reasons your business is doing so well is because your clients trust that you
 keep their designs safe and prevent other clients of yours from figuring out
@@ -49,15 +49,15 @@ At some point you decide that you want your process to speed up, so that you
 can handle more orders. So you hire an efficiency expert to come and look at
 where your employees can save time. The efficiency expert immediately spots a
 problem:\footnote{Note, the efficiency expert's `problem' is with regards to
-speed, not any other concern.} one worker, Alice, has to wait for another
-worker, Bob, to finish some cuts before she can know where she has to drill
-some holes. While she's waiting for Bob to finish, she is just sitting there,
-that's wasted time!  The efficiency expert notices that Alice doesn't
-\emph{really} have to know what Bob is doing, she just has to know if Bob is
-working on client A's design, or client B's design. Once she knows that, she
-can start drilling the holes she needs to drill. However, Bob's work is very
-complicated, so he can't communicate what he's doing until he is finished,
-which is what causes Alice to wait.
+speed, not any other concern such as wood usage.} one worker, Alice, has to
+wait for another worker, Bob, to finish some cuts before she can know where
+she has to drill some holes. While she's waiting for Bob to finish, she is
+just sitting there, that's wasted time!  The efficiency expert notices that
+Alice doesn't \emph{really} have to know what Bob is doing, she just has to
+know if Bob is working on client A's design, or client B's design. Once she
+knows that, she can start drilling the holes she needs to drill. However,
+Bob's work is very complicated, so he can't communicate what he's doing until
+he is finished, which is what causes Alice to wait.
 
 \subsubsection*{Enter Speculation}
 
@@ -119,23 +119,23 @@ speed up the process.
 This time they observe the new workflow and spot a potential waste of time:
 Whenever Alice was \emph{wrong} about which product Bob was working on she
 spent a lot of time discarding her current work, getting a new piece of wood,
-and starting the correct work. So the efficiency expert asks a potentially
-na\"{i}ve question:
+setting it up in the workshop, and starting the correct work. So the efficiency
+expert asks a potentially na\"{i}ve question:
 
 ``Could Alice just fill in the holes she drilled and use the same piece of
 wood? That would save her having to throw away her current piece of wood and
 getting a new one.''
 
 You have your engineers check that the structural integrity of the final product
-would not be compromised by this change, and then Give Alice her new directions:
+would not be compromised by this change, and then give Alice her new directions:
 
 When Alice incorrectly guesses what product Bob is working on, she is to fill
-in the holes she has already drilled with wood filler, and us the same wood on
+in the holes she has already drilled with wood filler, and use the same wood on
 the correct design.
 
-This works great! You have even faster turnaround times now. This works great
-and everyone loves it for \emph{10 years}\footnote{This is not an exaggeration,
-it took 10 years for a serious flaw in this strategy to be (publicly) discovered}.
+This works great! You have even faster turnaround times now, and everyone loves
+it for \emph{10 years}\footnote{This is not an exaggeration, it took 10 years
+for a serious flaw in this strategy to be (publicly) discovered.}.
 
 Then one day a designer at client A notices that one of the pieces of wood they
 received from your wood shop has filled holes in it. Knowing how wood shops
@@ -168,7 +168,8 @@ security contract that modern CPUs claim.
 \section{Meltdown}
 
 If Spectre sounded bad, meet Meltdown. Meltdown is very similar to Spectre,
-except it only affects Intel, and this is not a distinction that Intel wants.
+except it only affects Intel\footnote{As far as we know\dots}, and this is not a
+distinction that Intel wants.
 
 It requires a tiny extension to our wood shop analogy.
 
@@ -183,13 +184,13 @@ and then had to fill in those holes and use the same wood for a client.
 
 So you tell Alice that if she ever thinks Bob is working on a jig for the shop,
 or some other internal projects, she can't start working on her part until she
-knows for sure. This way you're never using your internal stock for client's
-work. It means that it might be a bit slower for internal project, but you are
+knows for sure. This way you're never using your internal stock for a client's
+work. It means that it might be a bit slower for internal projects, but you are
 okay with the waste/speed trade-off.
 
 \subsection*{Back to CPUs}
 
-Meltdown takes the problem from Specter and goes one step further: Arbitrary
+Meltdown takes the problem from Spectre and goes one step further: Arbitrary
 \emph{user} programs can read the memory of {the operating system} running on
 the same machine.
 
