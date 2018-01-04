@@ -1,0 +1,282 @@
+\documentclass{article}
+
+\title{Meltdown and Spectre Explanation}
+\author{JMCT}
+\date{January 4, 2018}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+There are really two big issues that came to light starting on Tuesday evening.
+Open Source developers submitted patches to the Linux OS that fixed a serious
+security problem: but the problem was not public yet, so late on Tuesday and
+early Wednesday\footnote{Even when I called you, JMCB.} it was not 100\%
+certain what the problem was.
+
+By the end of yesterday several independent security researches were able to
+reverse engineer what the problem was \emph{only based on what the solution
+was}. By the end of yesterday the cat was out of the bag and the original
+security researches published the flaws they had found, confirming what people
+had been guessing. Because it is useful to have names, the researchers who
+discovered these flaws named them: Spectre and Meltdown.
+
+There's a lot of noise about how serious these issues are, or how easy it is to
+mitigate. I'll address some of that at the end. First, we need to understand
+\emph{what} the problem is, and that requires a little background and some
+high-level analogies.
+
+\section{Background}
+
+Modern CPUs are very complicated machines. For the past 25 years, the majority
+of that complication has been towards one end: performance. When you start
+reaching the limits of how small you can get, you start figuring out clever
+methods to get faster. One of the main tools that CPU designers have used in in
+the pursuit of performance has been \emph{speculation}. It's important to
+understand what speculation is in order to understand the exploits that were
+discovered/announced, yesterday.
+
+\subsection*{A Wood Shop}
+
+You own and operator a woodworking business our of an industrial wood shop. You
+have two clients, A and B, and they both have custom designs. One of the
+reasons your business is doing so well is because your clients trust that you
+keep their designs safe and prevent other clients of yours from figuring out
+their designs.
+
+At some point you decide that you want your process to speed up, so that you
+can handle more orders. So you higher an efficiency expert to come and look at
+where your employees can save time. The efficiency expert immediately spots a
+problem:\footnote{Note, the efficiency expert's `problem' is with regards to
+speed, not any other concern.} one worker, Alice, has to wait for another
+worker, Bob, to finish some cuts before she can know where she has to drill
+some holes. While she's waiting for Bob to finish, she is just sitting there,
+that's wasted time!  The efficiency expert notices that Alice doesn't
+\emph{really} have to know what Bob is doing, she just has to know if Bob is
+working on client A's design, or client B's design. Once she knows that, she
+can start drilling the holes she needs to drill. However, Bob's work is very
+complicated, so he can't communicate what he's doing until he is finished,
+which is what causes Alice to wait.
+
+\subsubsection*{Enter Speculation}
+
+The efficiency expert has a clever idea: Why doesn't Alice \emph{speculate}
+on what Bob is doing? That way she can get started before he's finished!
+
+When the efficiency expert tells you this you scratch your head and wonder
+``what happens if she guesses incorrectly?''
+
+``Oh, that's no problem. When Alice speculates incorrectly just have her throw
+away her current work and start on the correct work. When that happens you're
+no worse off than you are now, and as long as she tends to get it right, you'll
+be saving all sorts of time!''
+
+Convinced of his argument you give Alice her new instructions; you tell her
+that she should try to figure out what Bob is working on, if she thinks it's
+client A's design, she should start that work, if she thinks it's client B's
+design, she should do that. If she guessed wrong just discard the work and
+start on the correct work.
+
+
+\subsection*{Back to CPUs}
+
+Now, as with any analogy, the above isn't perfect. However, it is a fairly
+decent explanation of how speculation works inside a CPU. You have some parts
+of the CPU take a \emph{guess} on what work they'll need to do, and they start
+doing that work before it's really needed (hence the term speculation). You can
+have some fairly clever methods of guessing pretty accurately, which saves you
+all sorts of time.
+
+It should be reinforced: \emph{almost all modern CPUs perform speculative
+execution}.\footnote{There are modern CPUs that do not perform speculation, but
+they are usually custom CPUs for \emph{very specific} applications where it is
+necessary to be able to predict performance very accurately. Speculation
+hinders that sort of analysis because the timing can vary wildly (depending on
+whether the speculation was correct or not). So for some applications you would
+rather have a slower processor that is easier to predict.} It is one of the
+foundational techniques of the past 20 years for achieving high performance.
+
+Speculative execution isn't inherently good or bad, but it is about
+\emph{performance} first and foremost. Other concerns you may
+have\footnote{Security, correctness, simplicity, etc.} are usually made more
+difficult by this technique. Whether it's worthwhile depends on your
+priorities. The emphasis of mainstream computing has been on performance above
+all other considerations. In that context speculative execution makes sense.
+
+\section{Spectre}
+
+Spectre is the first of two issues announced. Spectre affects the majority of
+mainstream processors, whether they are from Intel, AMD, or ARM.
+
+\subsection*{Back to the Wood Shop}
+
+Alice's speculation has been paying off wonderfully! The time between the order
+being taken and completed has been reduced drastically. You're hoping that if
+you higher the efficiency expert again they'll be able to find some other way to
+speed up the process.
+
+This time they observe the new workflow and spot a potential waste of time:
+Whenever Alice was \emph{wrong} about which product Bob was working on she
+spent a lot of time discarding her current work, getting a new piece of wood,
+and starting the correct work. So the efficiency expert asks a potentially
+na\"{i}ve question:
+
+``Could Alice just fill in the holes she drilled and use the same piece of
+wood? That would save her having to throw away her current piece of wood and
+getting a new one.''
+
+You have your engineers check that the structural integrity of the final product
+would not be compromised by this change, and then Give Alice her new directions:
+
+When Alice incorrectly guesses what product Bob is working on, she is to fill
+in the holes she has already drilled with wood filler, and us the same wood on
+the correct design.
+
+This works great! You have even faster turnaround times now. This works great
+and everyone loves it for \emph{10 years}\footnote{This is not an exaggeration,
+it took 10 years for a serious flaw in this strategy to be (publicly) discovered}.
+
+Then one day a designer at client A notices that one of the pieces of wood they
+received from your wood shop has filled holes in it. Knowing how wood shops
+save time, they wonder if they could reliably trigger a miss-speculation.
+
+This designer starts submitting designs with the sole intent of \emph{confusing
+Alice}. The designer doesn't actually care about the end product, the designer
+just wants to see what patterns they can find in the filled holes that Alice
+produces when she guesses wrong.
+
+By submitting very specific designs the designer is able to perfectly recreate
+client B's product, just by looking at the holes that were filled in the wood.
+
+Obviously, this is a problem.
+
+
+\subsection*{Back to CPUs}
+
+
+Spectre works like the above. By submitting very specific instruction to the
+CPU you are able to figure out what other processes on the computer have in
+\emph{their memory}. Even though the CPU is meant to stop you from seeing what
+other processes are up to.
+
+As I mentioned earlier, Spectre affect modern Intel, AMD, and ARM CPUs. Which
+means that arbitrary \emph{user} programs can read the memory from other
+programs running on the same machine. This is a fundamental violation of the
+security contract that modern CPUs claim.
+
+\section{Meltdown}
+
+If Spectre sounded bad, meet Meltdown. Meltdown is very similar to Spectre,
+except it only affect Intel, and this is not a distinction that Intel wants.
+
+It requires a tiny extension to our wood shop analogy.
+
+\subsection*{Back in the Shop}
+
+The workflow Bob and Alice have has been working great. However, you were
+always a little worried about Alice's speculation being a waste of wood, that's
+fine for the client's work, but not for the in-house work you sometimes have
+Alice and Bob do. Because you use very special wood for your internal projects
+you never want the situation where Alice started working on an internal project
+and then had to fill in those holes and use the same wood for a client.
+
+So you tell Alice that if she ever thinks Bob is working on a jig for the shop,
+or some other internal project, she can't start working on her part until she
+knows for sure. This way you're never using your internal stock for client's
+work. It means that it might be a bit slower for internal project, but you
+are okay with the waste/speed trade-off.
+
+\subsection*{Back to CPUs}
+
+Meltdown takes the problem from Specter and goes one step further: Arbitrary
+\emph{user} programs can read the memory of {the operating system} running on
+the same machine.
+
+So in our analogy, Intel \emph{never told Alice to not speculate on internal
+projects}. So now a malicious client can try to trick Alice into leaking
+\emph{internal} designs. This is \emph{very} bad.
+
+Luckily there is a fix! Just ensure that Alice \emph{actually discards the
+incorrect work}. Even more fortunately, you can do this in software! The
+problem is that by making Alice completely discard that work, you no longer
+have the speed improvements that you gained from that technique.
+
+\section{Conclusion}
+
+Without trying to be apocalyptic, this is a worst-case scenario for computer
+security. Yes, there are software patches that can \emph{mitigate} it, but...
+
+\begin{enumerate}
+  \item it causes a significant decrease in CPU performance
+  \item that assumes that every one of the \emph{billions}
+        of computer users will apply the software update as
+        soon as possible
+\end{enumerate}
+
+The first point is not an issue for \emph{individuals}. Most people are not
+maxing out the CPU constantly and can afford a performance hit, even if
+non-trivial. However, it is a very big issue for \emph{industry}. Intel has had
+a dominant market position almost entirely because of their performance
+profile. It turns out that part of that performance benefit was at the cost of
+a significant security problem that people did not know they were paying.
+
+The second point is a little more dire: People (in aggregate) are \emph{very}
+bad at updating their software. This update (Apple's, and Microsoft's will be
+available early next week) is essential. Think of the Intel chips in kiosks and
+ATMs that are unlikely to get updated. Think of the ARM chips in smart TVs
+that will never get updated.
+
+Now, that's just the software patch that works \emph{around} the problem. The
+problem itself cannot be fixed until new architectures are developed. This will
+not a `step' iteration from previous designs, the entire way that speculative
+execution works will have to be re-thought.
+
+\subsection*{Other Thoughts}
+
+Before the gritty details of the problem were published, the community was able
+to figure out that \emph{something} was serious just based on the open source
+patches that were being proposed.
+
+So, even with details on how the security problem manifested, individuals and
+research groups were able to do the following in a 24 hour period:
+
+\begin{enumerate}
+  \item Figure out that speculative execution led to a security bug
+  \item Develop a proof-of-concept program that read single bits from
+        privileged memory on Intel chips
+  \item Develop a website that when you load it in Chrome can read the
+        memory of arbitrary user programs also running on your machine
+  \item Produce a proof of concept that allows a malicious program on an Intel
+        CPU to gain root access to the machine, giving the attacker full
+        administrative access to the machine and its contents
+\end{enumerate}
+
+Each one of those built up from the previous one, showing the problem was real
+enough that even those without full details could create significant attacks.
+Imagine what Nation-States would be able to do.
+
+The Spectre, is bad, but not worse-case. Meltdown, which only affects Intel
+chips, is a literal worst-case security scenario.
+
+I am not being apocalyptic: In general people will be fine, and Google, Amazon,
+Apple, etc. will be able to ensure that their cloud systems are updated and
+patched. But it is not an exaggeration to say that there is a fundamental
+security flaw at the core of how modern CPUs are designed. I am certain there
+will be a hardware fix for this, but the very fact that it requires the
+re-architecture of Intel CPUs is very significant. It is very likely that it
+will change the course of development at Intel, AMD, ARM, and others, and cost
+a significant amount of money. Let's say it take 4 years for Intel to design a
+new architecture (I don't know how long it really takes, but definitely on the
+order of years), now they have to look at all of the designs they are working
+on and \emph{go back} and redesign the ones that are affected.
+
+Intel has also charged a very pretty premium on their CPUs because of their
+performance (forget gaming, I'm thinking about data center computers), it turns
+out that they do not have the performance advantage that they advertised once
+you take into account the workaround for the security issue. Cloud providers
+\emph{by definition} share the computing resource amongst several clients. No
+one would rent time on Amazon Web Services if they thought that opened up their
+data to anyone else renting time on Amazon's infrastructure!
+
+\end{document}
