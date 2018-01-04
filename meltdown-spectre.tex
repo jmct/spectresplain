@@ -182,10 +182,10 @@ you never want the situation where Alice started working on an internal project
 and then had to fill in those holes and use the same wood for a client.
 
 So you tell Alice that if she ever thinks Bob is working on a jig for the shop,
-or some other internal project, she can't start working on her part until she
+or some other internal projects, she can't start working on her part until she
 knows for sure. This way you're never using your internal stock for client's
-work. It means that it might be a bit slower for internal project, but you
-are okay with the waste/speed trade-off.
+work. It means that it might be a bit slower for internal project, but you are
+okay with the waste/speed trade-off.
 
 \subsection*{Back to CPUs}
 
@@ -229,8 +229,8 @@ that will never get updated.
 
 Now, that's just the software patch that works \emph{around} the problem. The
 problem itself cannot be fixed until new architectures are developed. This will
-not a `step' iteration from previous designs, the entire way that speculative
-execution works will have to be re-thought.
+not be a `step' iteration from previous designs, the entire way that
+speculative execution works will have to be re-thought.
 
 \subsection*{Other Thoughts}
 
@@ -254,7 +254,7 @@ research groups were able to do the following in a 24 hour period:
 
 Each one of those built up from the previous one, showing the problem was real
 enough that even those without full details could create significant attacks.
-Imagine what Nation-States would be able to do.
+Imagine what nation-states would be able to do.
 
 The Spectre, is bad, but not worse-case. Meltdown, which only affects Intel
 chips, is a literal worst-case security scenario.
@@ -277,6 +277,10 @@ out that they do not have the performance advantage that they advertised once
 you take into account the workaround for the security issue. Cloud providers
 \emph{by definition} share the computing resource amongst several clients. No
 one would rent time on Amazon Web Services if they thought that opened up their
-data to anyone else renting time on Amazon's infrastructure!
+data to anyone else renting time on Amazon's infrastructure! Sadly, it turns
+out that if Amazon\footnote{Amazon is just an example of an internet
+infrastructure company, none of this is unique to them or `their fault'.} was
+using Intel chips (they do use Intel CPUs) this vulnerability has been around
+for years.
 
 \end{document}
